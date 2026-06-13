@@ -5,9 +5,9 @@ const cors = require('cors');
 
 app.use(cors());
 
-// Tell Socket.io to natively build its gateway inside the /api subfolder path
+// Set Socket.io to its standard path (which is what Discord forwards to Render)
 const io = require('socket.io')(http, {
-    path: '/api/socket.io',
+    path: '/socket.io',
     cors: {
         origin: "*",
         methods: ["GET", "POST"],
@@ -15,15 +15,22 @@ const io = require('socket.io')(http, {
     }
 });
 
+// HEALTH CHECKS & FALLBACKS
 app.get('/', (req, res) => {
-    res.send('Jukebox sync server is live and healthy!');
+    res.send('Jukebox sync server is live!');
+});
+
+// If Discord doesn't strip the /api prefix, this custom handler manually passes it to Socket.io
+app.get('/api/socket.io/*', (req, res) => {
+    req.url = req.url.replace('/api', '');
+    io.engine.handleRequest(req, res);
 });
 
 const PORT = process.env.PORT || 3000;
 let roomStates = {};
 
 io.on('connection', (socket) => {
-    console.log('User linked to sync array via Discord safe path:', socket.id);
+    console.log('User linked to sync array:', socket.id);
 
     socket.on('join-room', (instanceId) => {
         socket.join(instanceId);
@@ -50,5 +57,5 @@ io.on('connection', (socket) => {
 });
 
 http.listen(PORT, () => {
-    console.log(`Backend engine fully operational on port ${PORT}`);
+    console.log(`Backend engine operational on port ${PORT}`);
 });
