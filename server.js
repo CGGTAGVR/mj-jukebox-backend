@@ -1,30 +1,36 @@
 const express = require('express');
 const app = express();
-const proxy = require('express-http-proxy'); 
 const http = require('http').createServer(app);
+const cors = require('cors');
 
-// Setup Socket.io to accept direct WebSocket connections from proxy tunnels
+// Enable open resource sharing across systems
+app.use(cors());
+
+// Initialize Socket.io to accept standard polling and websocket connections natively
 const io = require('socket.io')(http, {
-    path: '/socket.io', 
-    transports: ['websocket'],
     cors: {
         origin: "*",
-        methods: ["GET", "POST"]
-    }
+        methods: ["GET", "POST"],
+        credentials: true
+    },
+    allowEIO3: true // Backward compatibility for older socket client packages
 });
 
-// Intercepts Discord's '/api' prefix and forwards it straight into local loops
-app.use('/api', proxy(`http://localhost:${process.env.PORT || 3000}`, {
-    proxyReqPathResolver: function (req) {
-        return req.url; 
-    }
-}));
+// Health check endpoint for testing in your browser
+app.get('/', (req, res) => {
+    res.send('Jukebox sync server is live and healthy!');
+});
+
+// Explicitly handle Discord's default polling check route
+app.get('/api/socket.io/', (req, res) => {
+    res.status(200).send('Socket gateway ready.');
+});
 
 const PORT = process.env.PORT || 3000;
 let roomStates = {};
 
 io.on('connection', (socket) => {
-    console.log('User joined sync array via WebSocket:', socket.id);
+    console.log('User linked to sync array:', socket.id);
 
     socket.on('join-room', (instanceId) => {
         socket.join(instanceId);
@@ -51,5 +57,5 @@ io.on('connection', (socket) => {
 });
 
 http.listen(PORT, () => {
-    console.log(`Backend server fully operating on port ${PORT}`);
+    console.log(`Backend engine fully operational on port ${PORT}`);
 });
