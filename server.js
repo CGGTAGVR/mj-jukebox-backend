@@ -3,34 +3,27 @@ const app = express();
 const http = require('http').createServer(app);
 const cors = require('cors');
 
-// Enable open resource sharing across systems
 app.use(cors());
 
-// Initialize Socket.io to accept standard polling and websocket connections natively
+// Tell Socket.io to natively build its gateway inside the /api subfolder path
 const io = require('socket.io')(http, {
+    path: '/api/socket.io',
     cors: {
         origin: "*",
         methods: ["GET", "POST"],
         credentials: true
-    },
-    allowEIO3: true // Backward compatibility for older socket client packages
+    }
 });
 
-// Health check endpoint for testing in your browser
 app.get('/', (req, res) => {
     res.send('Jukebox sync server is live and healthy!');
-});
-
-// Explicitly handle Discord's default polling check route
-app.get('/api/socket.io/', (req, res) => {
-    res.status(200).send('Socket gateway ready.');
 });
 
 const PORT = process.env.PORT || 3000;
 let roomStates = {};
 
 io.on('connection', (socket) => {
-    console.log('User linked to sync array:', socket.id);
+    console.log('User linked to sync array via Discord safe path:', socket.id);
 
     socket.on('join-room', (instanceId) => {
         socket.join(instanceId);
