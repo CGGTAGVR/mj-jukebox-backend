@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
-    path: '/api/socket.io', // Tells your backend to listen precisely to the Discord tunnel traffic
+    path: '/api/socket.io', // Instructs the engine to explicitly listen to Discord's custom tunnel endpoint
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
@@ -11,11 +11,10 @@ const io = require('socket.io')(http, {
 
 const PORT = process.env.PORT || 3000;
 
-// Living state tracking for the synchronized rooms
 let roomStates = {};
 
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+    console.log('A user connected via Discord tunnel:', socket.id);
 
     socket.on('join-room', (instanceId) => {
         socket.join(instanceId);
@@ -42,5 +41,5 @@ io.on('connection', (socket) => {
 });
 
 http.listen(PORT, () => {
-    console.log(`Backend synchronization server running on port ${PORT}`);
+    console.log(`Backend server operating on port ${PORT}`);
 });
