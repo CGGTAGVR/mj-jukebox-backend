@@ -1,20 +1,30 @@
 const express = require('express');
 const app = express();
+const proxy = require('express-http-proxy'); 
 const http = require('http').createServer(app);
+
+// 1. Setup Socket.io to listen natively to the raw path
 const io = require('socket.io')(http, {
-    path: '/api/socket.io', // Standardizes path mapping configurations
+    path: '/socket.io', 
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
     }
 });
 
-const PORT = process.env.PORT || 3000;
+// 2. DISCORD TUNNEL ROUTER:
+// This intercepts Discord's '/api' prefix and forwards it cleanly into your server engines
+app.use('/api', proxy(`http://localhost:${process.env.PORT || 3000}`, {
+    proxyReqPathResolver: function (req) {
+        return req.url; // Strips out '/api' so Socket.io reads the underlying packet perfectly!
+    }
+}));
 
+const PORT = process.env.PORT || 3000;
 let roomStates = {};
 
 io.on('connection', (socket) => {
-    console.log('User joined sync array:', socket.id);
+    console.log('User joined sync array via Discord:', socket.id);
 
     socket.on('join-room', (instanceId) => {
         socket.join(instanceId);
@@ -41,5 +51,5 @@ io.on('connection', (socket) => {
 });
 
 http.listen(PORT, () => {
-    console.log(`Backend server operating on port ${PORT}`);
+    console.log(`Backend server fully operating on port ${PORT}`);
 });
