@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
-    path: '/api/socket.io', // Instructs the engine to explicitly listen to Discord's custom tunnel endpoint
+    path: '/api/socket.io', // Standardizes path mapping configurations
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 let roomStates = {};
 
 io.on('connection', (socket) => {
-    console.log('A user connected via Discord tunnel:', socket.id);
+    console.log('User joined sync array:', socket.id);
 
     socket.on('join-room', (instanceId) => {
         socket.join(instanceId);
@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
+        console.log('User departed sync array:', socket.id);
     });
 });
 
