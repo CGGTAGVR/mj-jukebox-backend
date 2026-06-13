@@ -2,8 +2,9 @@ const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
+    path: '/api/socket.io', // Tells your backend to listen precisely to the Discord tunnel traffic
     cors: {
-        origin: "*", // Allows your Vercel frontend to connect securely
+        origin: "*",
         methods: ["GET", "POST"]
     }
 });
